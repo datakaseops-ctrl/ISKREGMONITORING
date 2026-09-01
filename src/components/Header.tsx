@@ -1,6 +1,10 @@
 import React from 'react';
 import { RefreshCw, CheckCircle2, AlertCircle, Home, ChevronRight } from 'lucide-react';
 import { NavigationState } from '../types';
+import localDriveLogo from '../assets/images/it-division-drive-logo.png';
+
+const DRIVE_FILE_ID = '1bQQw-qQOOFJCK00Vg7ek0Yvz79Zt94oT';
+const DRIVE_LOGO_URL = `https://lh3.googleusercontent.com/d/${DRIVE_FILE_ID}`;
 
 interface HeaderProps {
   navState: NavigationState;
@@ -25,10 +29,31 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="bg-white border-b border-[#0e5774]/20 sticky top-0 z-30 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-3">
         
+        {/* Clickable Header Logo Banner (Navigates to Home Page) */}
+        <div className="flex justify-center items-center pb-2">
+          <button
+            onClick={() => onNavigate({ view: 'home' })}
+            className="group block focus:outline-none transition-transform active:scale-98 cursor-pointer"
+            title="Click to go to Home Dashboard"
+            aria-label="Government of Kerala, ITI Craftsmen Training, KASE, and IndiaSkills Logo Banner - Go to Home"
+          >
+            <img
+              src={DRIVE_LOGO_URL}
+              onError={(e) => {
+                // Fallback to local exact copy if Drive network is restricted
+                (e.currentTarget as HTMLImageElement).src = localDriveLogo;
+              }}
+              alt="Government of Kerala, ITI Craftsmen Training Scheme, Kerala Academy for Skills Excellence (KASE), and IndiaSkills Official Logos"
+              className="h-16 sm:h-20 md:h-24 max-w-full object-contain mx-auto transition-opacity group-hover:opacity-90"
+              referrerPolicy="no-referrer"
+            />
+          </button>
+        </div>
+
         {/* Centered Main Title and Synchronize Controls */}
-        <div className="flex flex-col items-center text-center">
+        <div className="flex flex-col items-center text-center pt-1 pb-2 border-t border-[#0e5774]/10">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-editorial-serif font-black tracking-tight text-[#0e5774]">
             IndiaSkills Registration Summary
           </h1>
@@ -69,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Breadcrumb Navigation */}
-        <nav className="mt-2.5 flex items-center gap-2 text-xs text-[#0e5774]">
+        <nav className="mt-2 flex items-center gap-2 text-xs text-[#0e5774]">
           <button
             onClick={() => onNavigate({ view: 'home' })}
             className={`inline-flex items-center gap-1 uppercase tracking-wider text-[11px] font-bold transition-colors cursor-pointer ${
