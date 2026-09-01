@@ -35,8 +35,8 @@ export default function App() {
   });
   const [activeTab, setActiveTab] = useState<ActiveTab>('districts');
 
-  const syncData = useCallback(async () => {
-    setIsLoading(true);
+  const syncData = useCallback(async (isManual = true) => {
+    if (isManual) setIsLoading(true);
     setErrorMessage(undefined);
     try {
       const result = await fetchLiveSheetData();
@@ -51,13 +51,17 @@ export default function App() {
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to sync with Google Sheet');
     } finally {
-      setIsLoading(false);
+      if (isManual) setIsLoading(false);
     }
   }, []);
 
-  // Fetch on mount
+  // Fetch immediately on mount and poll every 25 seconds
   useEffect(() => {
-    syncData();
+    syncData(true);
+    const interval = setInterval(() => {
+      syncData(false);
+    }, 25000);
+    return () => clearInterval(interval);
   }, [syncData]);
 
   const handleNavigateToDistrict = (districtName: string) => {
@@ -90,7 +94,7 @@ export default function App() {
         isLoading={isLoading}
         lastSynced={lastSynced}
         errorMessage={errorMessage}
-        onRefresh={syncData}
+        onRefresh={() => syncData(true)}
         totalRecords={candidates.length}
       />
 

@@ -154,35 +154,41 @@ export function parseCSV(csvText: string): CandidateRecord[] {
 export async function fetchLiveSheetData(): Promise<{ records: CandidateRecord[]; isLive: boolean; error?: string }> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(PUBLISHED_SHEET_CSV_URL, {
+    // Append simple timestamp query param to prevent browser caching without triggering CORS preflight
+    const separator = PUBLISHED_SHEET_CSV_URL.includes('?') ? '&' : '?';
+    const cacheBustedUrl = `${PUBLISHED_SHEET_CSV_URL}${separator}_t=${Date.now()}`;
+
+    // Standard simple GET without custom headers allows Google Sheets public CSV to respond with Access-Control-Allow-Origin: *
+    const response = await fetch(cacheBustedUrl, {
       signal: controller.signal,
-      headers: {
-        'Accept': 'text/csv, text/plain, */*'
-      }
     });
 
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+      throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
     }
 
     const text = await response.text();
     const parsed = parseCSV(text);
 
-    if (parsed.length > 0) {
+    if (parsed && parsed.length > 0) {
       return { records: parsed, isLive: true };
     } else {
-      return { records: INITIAL_CANDIDATE_DATA, isLive: false, error: 'Empty sheet data returned' };
+      return {
+        records: INITIAL_CANDIDATE_DATA,
+        isLive: false,
+        error: 'Empty sheet data returned from Google Sheets',
+      };
     }
   } catch (err: any) {
-    console.warn('Could not fetch live sheet CSV, falling back to embedded dataset:', err.message);
+    console.warn('Live sheet sync error:', err.message);
     return {
       records: INITIAL_CANDIDATE_DATA,
       isLive: false,
-      error: err.name === 'AbortError' ? 'Connection timed out' : err.message
+      error: err.name === 'AbortError' ? 'Connection timed out while contacting Google Sheets' : (err.message || 'Sync failed'),
     };
   }
 }
